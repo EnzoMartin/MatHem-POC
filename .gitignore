@@ -1,0 +1,17 @@
+logs
+*.log
+pids
+*.pid
+*.seed
+
+lib-cov
+coverage
+temp
+.grunt
+.lock-wscript
+build/Release
+node_modules
+config/local.js
+build
+.nyc_output
+test-results.xml
