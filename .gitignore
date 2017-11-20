@@ -15,3 +15,4 @@ config/local.js
 build
 .nyc_output
 test-results.xml
+.env

@@ -26,19 +26,29 @@
     "test": "nyc mocha --full-trace --recursive",
     "test:watch": "nyc mocha --full-trace --recursive -w",
     "test:ci": "nyc mocha --full-trace --recursive -R mocha-junit-reporter && nyc report --reporter=lcov",
-    "dev": "node app.js | bunyan -o short --color"
+    "dev": "node app.js | bunyan -o short --color",
+    "db-up": "db-migrate up --config ./config/database.json --verbose",
+    "db-down": "db-migrate down --config ./config/database.json --verbose"
   },
   "dependencies": {
-    "bunyan": "^1.8.1",
-    "osmosis": "^1.1.4"
+    "async": "^2.6.0",
+    "bluebird": "^3.5.1",
+    "bunyan": "^1.8.12",
+    "db-migrate": "^0.10.0-beta.24",
+    "db-migrate-mysql": "^1.1.10",
+    "ioredis": "^3.2.1",
+    "mysql": "^2.15.0",
+    "scrape-it": "^4.0.0",
+    "uuid": "^3.1.0"
   },
   "devDependencies": {
+    "dotenv": "^4.0.0",
     "enzo-codestyle": "^4.3.0",
-    "eslint": "^4.10.0",
+    "eslint": "^4.11.0",
     "expect": "^21.2.1",
     "mocha": "^4.0.1",
     "mocha-junit-reporter": "^1.15.0",
     "nyc": "^11.3.0",
-    "proxyquire": "^1.7.10"
+    "proxyquire": "^1.8.0"
   }
 }
