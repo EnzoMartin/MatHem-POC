@@ -27,8 +27,8 @@
     "test:watch": "nyc mocha --full-trace --recursive -w",
     "test:ci": "nyc mocha --full-trace --recursive -R mocha-junit-reporter && nyc report --reporter=lcov",
     "dev": "node app.js | bunyan -o short --color",
-    "db-up": "db-migrate up --config ./config/database.json --verbose",
-    "db-down": "db-migrate down --config ./config/database.json --verbose"
+    "db-up": "db-migrate up --verbose",
+    "db-down": "db-migrate down --verbose"
   },
   "dependencies": {
     "async": "^2.6.0",
