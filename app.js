@@ -11,3 +11,4 @@ const scanProduct = require('./modules/product');
 // scanProduct('/varor/saffran/saffran-0-5g-kockens');
 // scanProduct('/varor/valnotter/valnotter-med-skal-jumbo-eko-500g-klass1');
 scanCategory('/varor/frukt--och-gronsakskassar');
+scanCategory('/varor/kyckling');

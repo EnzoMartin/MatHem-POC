@@ -19,8 +19,24 @@ function getSidebarLinks(url){
 
 function getProductList(url){
   return scraper(url, {
+    title: '#productResultContainer > .product.textBox h3',
+    content: {
+      selector: '#productResultContainer > .product.textBox',
+      how: 'text',
+      convert: (item) => {
+        return item ? item.split('\n')[1].trim() : '';
+      }
+    },
+    url: {
+      selector: '.breadcrumbNav li.current a',
+      attr: 'href'
+    },
+    parent: {
+      selector: '.breadcrumbNav li:nth-last-child(2) a',
+      attr: 'href'
+    },
     items: {
-      listItem: '#productResultContainer .product',
+      listItem: '#productResultContainer > .product.prod-info',
       name: 'item',
       data: {
         name: '.prodHeader',
@@ -30,9 +46,9 @@ function getProductList(url){
         }
       }
     },
-    subcategories: {
-      listItem: 'ul.navigation li.selected ul > li',
-      name: 'subcategory',
+    categories: {
+      listItem: 'ul.navigation li.selected ul > li:not(.selected)',
+      name: 'category',
       data: {
         name: 'a',
         url: {
@@ -41,9 +57,9 @@ function getProductList(url){
         }
       }
     },
-    bottomcategories: {
-      listItem: 'ul.navigation li.selected ul > li.selected > ul > li',
-      name: 'bottomcategory',
+    subcategories: {
+      listItem: 'ul.navigation li.selected ul > li.selected > ul > li:not(.selected)',
+      name: 'subcategory',
       data: {
         name: 'a',
         url: {
@@ -61,6 +77,7 @@ function getProductDetail(url){
       listItem: '.productPage',
       name: 'product',
       data: {
+        // TODO: Handle out of stock items
         name: 'h1',
         content: {
           selector: '.productInfo',

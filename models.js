@@ -71,10 +71,11 @@ class Category extends WithUrl {
   constructor(data){
     super(data);
     this.parent = data.parent === '/' || !data.parent ? null : data.parent;
+    this.content = data.description || '';
   }
 
   static keys(){
-    return ['id', 'product', 'target', 'parent'];
+    return ['id', 'product', 'target', 'parent', 'title', 'description'];
   }
 }
 
