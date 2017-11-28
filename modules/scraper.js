@@ -73,7 +73,13 @@ function getProductDetail(url){
             return item.includes('Ursprung') ? item.replace('<strong>Ursprung:</strong>', '').trim() : '';
           }
         },
-        manufacturer: '.productInfo p > a',
+        manufacturer: {
+          selector: '.productInfo p > a',
+          how: 'html',
+          convert: (item) => {
+            return item ? item.replace('varor fr&#xE5;n', '').trim() : '';
+          }
+        },
         manufacturerUrl: {
           selector: '.productInfo p > a',
           attr: 'href'

@@ -7,7 +7,8 @@ const { getProductDetail, getProductList, getSidebarLinks } = require('./modules
 
 const { logger, redis, db } = config;
 // const types = ['badges', 'categories', 'manufacturer', 'origins', 'tags'];
-const types = ['badges', 'categories'];
+const types = ['badges', 'categories', 'manufacturer', 'origins'];
+
 const mapTypes = types.map((item) => {
   return `${item.substr(0, 1).toUpperCase()}${item.substr(1)}Map`;
 });
@@ -113,11 +114,11 @@ function scanProduct(fragment){
       url: fragment
     });
 
-    const origin = new Models.Origin({ name: item.origin });
-    const manufacturer = new Models.Manufacturer({
+    const origins = item.origin ? [new Models.Origin({ name: item.origin })] : [];
+    const manufacturer = item.manufacturerUrl ? [new Models.Manufacturer({
       name: item.manufacturer,
       url: item.manufacturerUrl
-    });
+    })] : [];
 
     const categories = data.categories.reduce((items, item) => {
       if(item.url !== '/'){
@@ -137,7 +138,9 @@ function scanProduct(fragment){
 
     const mappings = generateMappings(product, {
       badges,
-      categories
+      categories,
+      origins,
+      manufacturer
     });
 
     // console.log('product', product);

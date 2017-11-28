@@ -53,7 +53,12 @@ class Tag extends WithName {}
 class CategoriesMap extends Map {}
 class BadgesMap extends Map {}
 class ManufacturerMap extends Map {}
-class OriginsMap extends Map {}
+class OriginsMap extends Map {
+  constructor(product, target){
+    super(product, target);
+    this.target = target.name;
+  }
+}
 class TagsMap extends Map {}
 
 module.exports = {
