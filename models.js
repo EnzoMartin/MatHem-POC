@@ -12,6 +12,10 @@ class Map {
     this.product = product.url;
     this.target = target.url;
   }
+
+  static keys(){
+    return ['id', 'product', 'target'];
+  }
 }
 
 class SimpleMap extends Map {
@@ -63,13 +67,24 @@ class Item extends WithUrl {
   }
 }
 
-class Category extends WithUrl {}
+class Category extends WithUrl {
+  constructor(data){
+    super(data);
+    this.parent = data.parent === '/' || !data.parent ? null : data.parent;
+  }
+
+  static keys(){
+    return ['id', 'product', 'target', 'parent'];
+  }
+}
+
 class Badge extends WithUrl {
   constructor(data){
     super(data);
     this.text = data.text || this.name;
   }
 }
+
 class Manufacturer extends WithUrl {}
 class Origin extends WithName {}
 class Tag extends WithName {

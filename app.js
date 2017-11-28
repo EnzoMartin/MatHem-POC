@@ -49,7 +49,8 @@ function generateMappings(product, data){
         values,
         keys: keys.join(','),
         updateStatement: updateStatement.join(','),
-        mapping
+        mapping,
+        mappingKeys: MapModel.keys().join(',')
       };
     }
 
@@ -60,12 +61,13 @@ function generateMappings(product, data){
 /**
  * Bulk insert the product to definition mapping rows
  * @param {String} tableName
+ * @param {String} keys
  * @param {Array} values
  * @param {Function} callback
  * @returns {*}
  */
-function queryInsertMapping(tableName, values, callback){
-  return db.query(`INSERT INTO ${tableName} (id,product,target) VALUES ?`, [values], callback);
+function queryInsertMapping(tableName, keys, values, callback){
+  return db.query(`INSERT INTO ${tableName} (${keys}) VALUES ?`, [values], callback);
 }
 
 /**
@@ -99,7 +101,7 @@ function insertMappings(product, mappings){
           if(err){
             logger.error({ err, query: insertDefinitions.sql }, `Failed to insert ${type} map definition`);
           } else {
-            const insertMappings = queryInsertMapping(mappingTable, mappingType.mapping, (err) => {
+            const insertMappings = queryInsertMapping(mappingTable, mappingType.mappingKeys, mappingType.mapping, (err) => {
               if(err){
                 logger.error({ err, query: insertMappings.sql }, `Failed to insert ${type} mappings for ${product.url}`);
               }
@@ -154,9 +156,12 @@ function scanProduct(fragment){
       url: item.manufacturerUrl
     })] : [];
 
-    const categories = data.categories.reduce((items, item) => {
+    const categories = data.categories.reduce((items, item, index) => {
       if(item.url !== '/'){
-        const category = new Models.Category(item);
+        const category = new Models.Category({
+          ...item,
+          parent: (data.categories[index - 1] || {}).url
+        });
 
         items.push(category);
 
@@ -200,7 +205,7 @@ function scanProduct(fragment){
       if(err){
         logger.error({err,query:deleteMappings.sql},`Failed to delete similar items mappings for ${product.url}`);
       } else {
-        const insertMappings = queryInsertMapping('similar_map', similarProducts, (err) => {
+        const insertMappings = queryInsertMapping('similar_map', Models.SimilarMap.keys().join(','), similarProducts, (err) => {
           if(err){
             logger.error({ err, query: insertMappings.sql }, `Failed to insert similar products mappings for ${product.url}`);
           }
