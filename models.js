@@ -9,6 +9,13 @@ class Map {
   }
 }
 
+class SimpleMap extends Map {
+  constructor(product, target){
+    super(product, target);
+    this.target = target.name;
+  }
+}
+
 class WithName {
   constructor(data){
     this.name = data.name;
@@ -47,19 +54,19 @@ class Badge extends WithUrl {
 }
 class Manufacturer extends WithUrl {}
 class Origin extends WithName {}
-class Tag extends WithName {}
+class Tag extends WithName {
+  constructor(data){
+    super(data);
+    this.name = this.name.replace('Denna vara är ', '').replace(/[^\w\s]/gi, '').toLowerCase();
+  }
+}
 
 // Mappings
 class CategoriesMap extends Map {}
 class BadgesMap extends Map {}
 class ManufacturerMap extends Map {}
-class OriginsMap extends Map {
-  constructor(product, target){
-    super(product, target);
-    this.target = target.name;
-  }
-}
-class TagsMap extends Map {}
+class OriginsMap extends SimpleMap {}
+class TagsMap extends SimpleMap {}
 
 module.exports = {
   Item,

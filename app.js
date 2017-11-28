@@ -6,8 +6,7 @@ const async = require('async');
 const { getProductDetail, getProductList, getSidebarLinks } = require('./modules/scraper');
 
 const { logger, redis, db } = config;
-// const types = ['badges', 'categories', 'manufacturer', 'origins', 'tags'];
-const types = ['badges', 'categories', 'manufacturer', 'origins'];
+const types = ['badges', 'categories', 'manufacturer', 'origins', 'tags'];
 
 const mapTypes = types.map((item) => {
   return `${item.substr(0, 1).toUpperCase()}${item.substr(1)}Map`;
@@ -132,15 +131,19 @@ function scanProduct(fragment){
       return items;
     }, []);
 
-    const badges = data.badges.map((item) => {
-      return new Models.Badge(item);
-    });
+    const {badges, tags} = data.badges.reduce((data, item) => {
+      data.badges.push(new Models.Badge(item));
+
+      data.tags.push(new Models.Tag(item));
+      return data;
+    }, {badges:[],tags:[]});
 
     const mappings = generateMappings(product, {
       badges,
       categories,
       origins,
-      manufacturer
+      manufacturer,
+      tags
     });
 
     // console.log('product', product);
