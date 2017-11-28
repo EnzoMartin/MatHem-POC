@@ -148,6 +148,17 @@ function getProductDetail(url){
           attr: 'href'
         }
       }
+    },
+    similar: {
+      listItem: '.similarProducts ul > li .prodHeader',
+      name: 'similar',
+      data: {
+        name: 'a',
+        url: {
+          selector: 'a',
+          attr: 'href'
+        }
+      }
     }
   });
 }

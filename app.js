@@ -1,6 +1,5 @@
 const config = require('./config');
 const Models = require('./models');
-const scraper = require('scrape-it');
 const async = require('async');
 
 const { getProductDetail, getProductList, getSidebarLinks } = require('./modules/scraper');
@@ -16,6 +15,12 @@ const mapTypes = types.map((item) => {
 // getProductList();
 // getProductDetail();
 
+/**
+ * Generate mapping object of every mapping type
+ * @param {Object} product
+ * @param {Object} data
+ * @returns {Object}
+ */
 function generateMappings(product, data){
   return types.reduce((mappings, type, index) => {
     const items = data[type];
@@ -52,23 +57,49 @@ function generateMappings(product, data){
   }, {});
 }
 
+/**
+ * Bulk insert the product to definition mapping rows
+ * @param {String} tableName
+ * @param {Array} values
+ * @param {Function} callback
+ * @returns {*}
+ */
+function queryInsertMapping(tableName, values, callback){
+  return db.query(`INSERT INTO ${tableName} (id,product,target) VALUES ?`, [values], callback);
+}
+
+/**
+ * Delete existing mappings
+ * @param {Object} product
+ * @param {String} tableName
+ * @param {Function} callback
+ * @returns {*}
+ */
+function queryDeleteMappings(product, tableName, callback){
+  return db.query(`DELETE FROM ${tableName} WHERE product = ?`, product.url, callback);
+}
+
+/**
+ * Insert all the mapping information
+ * @param {Object} product
+ * @param {Object} mappings
+ */
 function insertMappings(product, mappings){
   types.forEach((type) => {
     const mappingTable = `${type}_map`;
     const mappingType = mappings[type];
 
     // Clear out the existing product <-> definition mapping first
-    const deleteMappings = db.query(`DELETE FROM ${mappingTable} WHERE product = ?`, product.url, (err) => {
+    const deleteMappings = queryDeleteMappings(product, mappingTable, (err) => {
       if(err){
-        logger.error({ err, query: deleteMappings.sql }, `Failed to delete ${type} mappings for ${product.url}`);
+        logger.error({err,query:deleteMappings.sql},`Failed to delete ${type} mappings for ${product.url}`);
       } else if(mappingType && mappingType.values.length){
         // Add the updated definitions
         const insertDefinitions = db.query(`INSERT INTO ${type} (${mappingType.keys}) VALUES ? ON DUPLICATE KEY UPDATE ${mappingType.updateStatement}`, [mappingType.values], (err) => {
           if(err){
             logger.error({ err, query: insertDefinitions.sql }, `Failed to insert ${type} map definition`);
           } else {
-            // Insert the new product <-> definition mappings
-            const insertMappings = db.query(`INSERT INTO ${mappingTable} (id,product,target) VALUES ?`, [mappingType.mapping], (err) => {
+            const insertMappings = queryInsertMapping(mappingTable, mappingType.mapping, (err) => {
               if(err){
                 logger.error({ err, query: insertMappings.sql }, `Failed to insert ${type} mappings for ${product.url}`);
               }
@@ -101,6 +132,10 @@ function scanInitial(){
   });
 }
 
+/**
+ * Scan a given product
+ * @param {String} fragment
+ */
 function scanProduct(fragment){
   const url = `${config.rootUrl}${fragment}`;
 
@@ -146,6 +181,10 @@ function scanProduct(fragment){
       tags
     });
 
+    const similarProducts = data.similar.map((item) => {
+      return Object.values(new Models.SimilarMap(product,item));
+    });
+
     // console.log('product', product);
     // console.log('categories', categories);
     // console.log('badges', badges);
@@ -154,6 +193,18 @@ function scanProduct(fragment){
     const insertItem = db.query('INSERT INTO products SET ? ON DUPLICATE KEY UPDATE ?', [product, product], (err) => {
       if(err){
         logger.error({ err, query: insertItem.sql }, `Failed to insert product ${product.name}`);
+      }
+    });
+
+    const deleteMappings = queryDeleteMappings(product, 'similar_map', (err) => {
+      if(err){
+        logger.error({err,query:deleteMappings.sql},`Failed to delete similar items mappings for ${product.url}`);
+      } else {
+        const insertMappings = queryInsertMapping('similar_map', similarProducts, (err) => {
+          if(err){
+            logger.error({ err, query: insertMappings.sql }, `Failed to insert similar products mappings for ${product.url}`);
+          }
+        });
       }
     });
 
