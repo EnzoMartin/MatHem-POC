@@ -1,4 +1,5 @@
 const scraper = require('scrape-it');
+const { convertToDecimal } = require('./utils');
 
 function getSidebarLinks(url){
   return scraper(url, {
@@ -26,22 +27,7 @@ function getProductList(url){
         url: {
           selector: '.prodImg a',
           attr: 'href'
-        },
-        offer: '.prodImg .offerBubble',
-        limitations: '.prodImg .deliveryDays',
-        badges: {
-          selector: '.prodImg .productBadges img',
-          attr: 'src'
-        },
-        image: {
-          selector: '.prodImg a > img',
-          attr: 'src'
-        },
-        origin: '.origin',
-        priceOriginal: '.priceOrd',
-        priceReduced: '.red > span',
-        priceType: '.red > font',
-        priceKg: '.priceKg > span'
+        }
       }
     },
     subcategories: {
@@ -91,6 +77,58 @@ function getProductDetail(url){
         manufacturerUrl: {
           selector: '.productInfo p > a',
           attr: 'href'
+        },
+        offer: '.prodImg .offerBubble',
+        limitations: '.prodImg .deliveryDays',
+        image: {
+          selector: '.prodImg #productImage',
+          attr: 'src'
+        },
+        priceOriginal: {
+          selector: '.productPrice .priceOrd s',
+          how: 'html',
+          convert: (item) => {
+            return item ? convertToDecimal(item.replace('Ord.pris','')) : 0;
+          }
+        },
+        priceReduced: {
+          selector: '.productPrice .red #spnPrice',
+          how: 'html',
+          convert: (item) => {
+            return convertToDecimal(item);
+          }
+        },
+        priceType: {
+          selector: '.productPrice .priceKg > span',
+          how: 'html',
+          convert: (item) => {
+            return item.split('/')[1].trim();
+          }
+        },
+        priceUnit: {
+          selector: '.productPrice .priceKg > span',
+          how: 'html',
+          convert: (item) => {
+            return convertToDecimal(item.split('/')[0].replace('ca', ''));
+          }
+        }
+      }
+    },
+    badges: {
+      listItem: '.prodImg .productBadges',
+      name: 'badge',
+      data: {
+        name: {
+          selector: 'img',
+          attr: 'data-original-title'
+        },
+        url: {
+          selector: 'img',
+          attr: 'src'
+        },
+        text: {
+          selector: 'img',
+          attr: 'alt'
         }
       }
     },
