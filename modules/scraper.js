@@ -19,16 +19,25 @@ function getSidebarLinks(url){
 
 function getProductList(url){
   return scraper(url, {
+    name: '.productContainer .myPageTopContainer h1',
     title: '#productResultContainer > .product.textBox h3',
-    content: {
+    description: {
       selector: '#productResultContainer > .product.textBox',
       how: 'text',
       convert: (item) => {
         return item ? item.split('\n')[1].trim() : '';
       }
     },
+    more: {
+      selector: '#callbackUrl',
+      attr: 'href'
+    },
+    total: {
+      selector: '#totalProductsFound',
+      attr: 'value'
+    },
     url: {
-      selector: '.breadcrumbNav li.current a',
+      selector: '.breadcrumbNav li:last-of-type a',
       attr: 'href'
     },
     parent: {
@@ -64,6 +73,22 @@ function getProductList(url){
         name: 'a',
         url: {
           selector: 'a',
+          attr: 'href'
+        }
+      }
+    }
+  });
+}
+
+function getMoreProductList(url){
+  return scraper(url, {
+    items: {
+      listItem: '.product.prod-info',
+      name: 'item',
+      data: {
+        name: '.prodHeader',
+        url: {
+          selector: '.prodImg a',
           attr: 'href'
         }
       }
@@ -183,5 +208,6 @@ function getProductDetail(url){
 module.exports = {
   getSidebarLinks,
   getProductList,
+  getMoreProductList,
   getProductDetail
 };

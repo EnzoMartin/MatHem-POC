@@ -71,7 +71,8 @@ class Category extends WithUrl {
   constructor(data){
     super(data);
     this.parent = data.parent === '/' || !data.parent ? null : data.parent;
-    this.content = data.description || '';
+    this.description = data.description || '';
+    this.title = data.title || this.name;
   }
 
   static keys(){

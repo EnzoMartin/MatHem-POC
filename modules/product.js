@@ -45,7 +45,7 @@ function generateMappings(product, data){
         definitions: {
           values: definitionValues,
           keys: definitionKeys.join(','),
-          updateStatement: updateStatement.join(','),
+          updateStatement: updateStatement.join(',')
         },
         mappings: {
           values: mappingValues,

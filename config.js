@@ -19,7 +19,13 @@ const pjson = require('./package.json');
 const logger = bunyan.createLogger({
   name:pjson.name,
   serializers: {
-    err: bunyan.stdSerializers.err
+    err: bunyan.stdSerializers.err,
+    item: (data) => {
+      return {
+        name: data.name,
+        url: data.url
+      };
+    }
   }
 });
 
@@ -39,7 +45,7 @@ const redis = new Redis({
 });
 
 module.exports = {
-  rootUrl: 'https://www.mathem.se/',
+  rootUrl: 'https://www.mathem.se',
   logger,
   db,
   redis
