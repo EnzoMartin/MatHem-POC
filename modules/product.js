@@ -23,30 +23,34 @@ function generateMappings(product, data){
 
     if(items.length){
       const MapModel = Models[mapTypes[index]];
-      const keys = [];
+      const definitionKeys = [];
       const updateStatement = [];
 
       // Use first model in array to get keys
       Object.keys(items[0]).forEach((item) => {
-        keys.push(`\`${item}\``);
+        definitionKeys.push(`\`${item}\``);
         updateStatement.push(`${item}=VALUES(${item})`);
       });
 
-      const { values, mapping } = items.reduce((data, item) => {
+      const { definitionValues, mappingValues } = items.reduce((data, item) => {
         // Push values of map definitions
-        data.values.push(Object.values(item));
+        data.definitionValues.push(Object.values(item));
 
         // Push product to target map relation
-        data.mapping.push(Object.values(new MapModel(product, item)));
+        data.mappingValues.push(Object.values(new MapModel(product, item)));
         return data;
-      }, { values: [], mapping: [] });
+      }, { definitionValues: [], mappingValues: [] });
 
       mappings[type] = {
-        values,
-        keys: keys.join(','),
-        updateStatement: updateStatement.join(','),
-        mapping,
-        mappingKeys: MapModel.keys().join(',')
+        definitions: {
+          values: definitionValues,
+          keys: definitionKeys.join(','),
+          updateStatement: updateStatement.join(','),
+        },
+        mappings: {
+          values: mappingValues,
+          keys: MapModel.keys().join(',')
+        }
       };
     }
 
@@ -80,30 +84,40 @@ function queryDeleteMappings(product, tableName, callback){
 /**
  * Insert all the mapping information
  * @param {Object} product
- * @param {Object} mappings
+ * @param {Object} allMappings
  */
-function insertMappings(product, mappings){
+function insertMappings(product, allMappings){
   types.forEach((type) => {
     const mappingTable = `${type}_map`;
-    const mappingType = mappings[type];
+    const data = allMappings[type] || {};
+    const { definitions, mappings } = data;
+
+    function insertMappings(){
+      const insertMappings = queryInsertMapping(mappingTable, mappings.keys, mappings.values, (err) => {
+        if(err){
+          logger.error({ err, query: insertMappings.sql }, `Failed to insert ${type} mappings for ${product.url}`);
+        }
+      });
+    }
 
     // Clear out the existing product <-> definition mapping first
     const deleteMappings = queryDeleteMappings(product, mappingTable, (err) => {
       if(err){
         logger.error({err,query:deleteMappings.sql},`Failed to delete ${type} mappings for ${product.url}`);
-      } else if(mappingType && mappingType.values.length){
+      } else if(definitions && definitions.values.length){
         // Add the updated definitions
-        const insertDefinitions = db.query(`INSERT INTO ${type} (${mappingType.keys}) VALUES ? ON DUPLICATE KEY UPDATE ${mappingType.updateStatement}`, [mappingType.values], (err) => {
-          if(err){
-            logger.error({ err, query: insertDefinitions.sql }, `Failed to insert ${type} map definition`);
-          } else {
-            const insertMappings = queryInsertMapping(mappingTable, mappingType.mappingKeys, mappingType.mapping, (err) => {
-              if(err){
-                logger.error({ err, query: insertMappings.sql }, `Failed to insert ${type} mappings for ${product.url}`);
-              }
-            });
-          }
-        });
+        if(type !== 'categories'){
+          const insertDefinitions = db.query(`INSERT INTO ${type} (${definitions.keys}) VALUES ? ON DUPLICATE KEY UPDATE ${definitions.updateStatement}`, [definitions.values], (err) => {
+            if(err){
+              logger.error({ err, query: insertDefinitions.sql }, `Failed to insert ${type} map definition`);
+            } else {
+              insertMappings();
+            }
+          });
+        } else {
+          // Category definitions are updated by the categories scraper
+          insertMappings();
+        }
       }
     });
   });
