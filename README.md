@@ -3,7 +3,15 @@
 Small project to play with the UX of a grocery website
 
 ## TODO
-- Make UI
+- [x] Scrape products
+- [x] Scrape categories
+- [x] Create data mappings
+- [ ] Set up React/Vue app
+- [ ] Category list view
+- [ ] Product detail view
+- [ ] Product search
+- [ ] Filtering and discovery
+- [ ] Caching
 
 ## Usage
 
