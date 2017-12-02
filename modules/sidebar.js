@@ -1,9 +1,9 @@
 const config = require('../config');
-const Models = require('../models');
 
 const { getSidebarLinks } = require('./scraper');
+const { diffCrawledCategories } = require('./utils');
 
-const { logger, redis, db } = config;
+const { logger } = config;
 
 function scanSidebar(fragment){
   const url = `${config.rootUrl}${fragment}`;
@@ -11,19 +11,17 @@ function scanSidebar(fragment){
   getSidebarLinks(url).then((data) => {
     const { menu } = data;
 
-    const items = menu.reduce((items, item) => {
-      if(item.url){
-        items[item.url] = false;
+    // Remove first entry as it's homepage
+    menu.shift();
+    const categories = menu.map((item) => { return item.url; });
+
+    diffCrawledCategories({url: '/', name: 'Home'}, categories, (err) => {
+      if(err){
+        logger.error({ err }, 'Failed to diff categories from sidebar');
       }
-      return items;
-    }, {});
-
-    redis.hmset('urls.crawled', items);
-
-    Object.keys(items).forEach((key) => {
-
     });
-    console.log(items);
+  }).catch((err) => {
+    logger.error({ err }, 'Failed to fetch sidebar');
   });
 }
 
