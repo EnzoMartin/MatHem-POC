@@ -22,7 +22,7 @@ const logger = bunyan.createLogger({
     err: bunyan.stdSerializers.err,
     item: (data) => {
       return {
-        name: data.name,
+        name: data.name || 'Unknown',
         url: data.url
       };
     }

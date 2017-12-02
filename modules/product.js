@@ -1,9 +1,10 @@
+const async = require('async');
+
 const config = require('../config');
 const Models = require('../models');
 
 const { getProductDetail } = require('./scraper');
-
-const { logger, db } = config;
+const { logger, redis, db } = config;
 
 const types = ['badges', 'categories', 'manufacturer', 'origins', 'tags'];
 
@@ -85,122 +86,150 @@ function queryDeleteMappings(product, tableName, callback){
  * Insert all the mapping information
  * @param {Object} product
  * @param {Object} allMappings
+ * @param {Function} callback
  */
-function insertMappings(product, allMappings){
-  types.forEach((type) => {
-    const mappingTable = `${type}_map`;
-    const data = allMappings[type] || {};
-    const { definitions, mappings } = data;
+function insertMappings(product, allMappings, callback){
+  const tasks = types.map((type) => {
+    return (callback) => {
+      const mappingTable = `${type}_map`;
+      const data = allMappings[type] || {};
+      const { definitions, mappings } = data;
 
-    function insertMappings(){
-      const insertMappings = queryInsertMapping(mappingTable, mappings.keys, mappings.values, (err) => {
+      function insertMappings(){
+        const insertMappings = queryInsertMapping(mappingTable, mappings.keys, mappings.values, (err) => {
+          if(err){
+            logger.error({ err, query: insertMappings.sql }, `Failed to insert ${type} mappings for ${product.url}`);
+          }
+          callback(err);
+        });
+      }
+
+      // Clear out the existing product <-> definition mapping first
+      const deleteMappings = queryDeleteMappings(product, mappingTable, (err) => {
         if(err){
-          logger.error({ err, query: insertMappings.sql }, `Failed to insert ${type} mappings for ${product.url}`);
+          logger.error({err,query:deleteMappings.sql},`Failed to delete ${type} mappings for ${product.url}`);
+          callback(err);
+        } else if(definitions && definitions.values.length){
+          // Add the updated definitions
+          if(type !== 'categories'){
+            const insertDefinitions = db.query(`INSERT INTO ${type} (${definitions.keys}) VALUES ? ON DUPLICATE KEY UPDATE ${definitions.updateStatement}`, [definitions.values], (err) => {
+              if(err){
+                logger.error({ err, query: insertDefinitions.sql }, `Failed to insert ${type} map definition`);
+                callback(err);
+              } else {
+                insertMappings();
+              }
+            });
+          } else {
+            // Category definitions are updated by the categories scraper
+            insertMappings();
+          }
+        } else {
+          callback();
         }
       });
-    }
-
-    // Clear out the existing product <-> definition mapping first
-    const deleteMappings = queryDeleteMappings(product, mappingTable, (err) => {
-      if(err){
-        logger.error({err,query:deleteMappings.sql},`Failed to delete ${type} mappings for ${product.url}`);
-      } else if(definitions && definitions.values.length){
-        // Add the updated definitions
-        if(type !== 'categories'){
-          const insertDefinitions = db.query(`INSERT INTO ${type} (${definitions.keys}) VALUES ? ON DUPLICATE KEY UPDATE ${definitions.updateStatement}`, [definitions.values], (err) => {
-            if(err){
-              logger.error({ err, query: insertDefinitions.sql }, `Failed to insert ${type} map definition`);
-            } else {
-              insertMappings();
-            }
-          });
-        } else {
-          // Category definitions are updated by the categories scraper
-          insertMappings();
-        }
-      }
-    });
+    };
   });
+
+  async.parallel(tasks, callback);
 }
 
 
 /**
  * Scan a given product
  * @param {String} fragment
+ * @param {Function} callback
  */
-function scanProduct(fragment){
+function scanProduct(fragment, callback){
   const url = `${config.rootUrl}${fragment}`;
 
   getProductDetail(url).then((data) => {
     const item = data.item[0];
-    const toCrawl = [];
 
-    const product = new Models.Item({
-      ...data.item[0],
-      url: fragment
-    });
+    // Some items are unparseable apparently
+    if(!item){
+      redis.sadd('items.unparseable', fragment, () => {
+        callback();
+      });
+    } else {
+      const product = new Models.Item({
+        ...data.item[0],
+        url: fragment
+      });
 
-    const origins = item.origin ? [new Models.Origin({ name: item.origin })] : [];
-    const manufacturer = item.manufacturerUrl ? [new Models.Manufacturer({
-      name: item.manufacturer,
-      url: item.manufacturerUrl
-    })] : [];
+      const origins = item.origin ? [new Models.Origin({ name: item.origin })] : [];
+      const manufacturer = item.manufacturerUrl ? [new Models.Manufacturer({
+        name: item.manufacturer,
+        url: item.manufacturerUrl
+      })] : [];
 
-    const categories = data.categories.reduce((items, item, index) => {
-      if(item.url !== '/'){
-        const category = new Models.Category({
-          ...item,
-          parent: (data.categories[index - 1] || {}).url
-        });
+      const categories = data.categories.map((item) => {
+        return new Models.Category(item);
+      });
 
-        items.push(category);
+      const {badges, tags} = data.badges.reduce((data, item) => {
+        data.badges.push(new Models.Badge(item));
 
-        // Add to crawler
-        toCrawl.push({ [category.url]: false});
-      }
-      return items;
-    }, []);
+        data.tags.push(new Models.Tag(item));
+        return data;
+      }, {badges:[],tags:[]});
 
-    const {badges, tags} = data.badges.reduce((data, item) => {
-      data.badges.push(new Models.Badge(item));
+      const mappings = generateMappings(product, {
+        badges,
+        categories,
+        origins,
+        manufacturer,
+        tags
+      });
 
-      data.tags.push(new Models.Tag(item));
-      return data;
-    }, {badges:[],tags:[]});
+      const similarProducts = data.similar.map((item) => {
+        return Object.values(new Models.SimilarMap(product,item));
+      });
 
-    const mappings = generateMappings(product, {
-      badges,
-      categories,
-      origins,
-      manufacturer,
-      tags
-    });
+      const tasks = {
+        insertItem: (callback) => {
+          const insertItem = db.query('INSERT INTO products SET ? ON DUPLICATE KEY UPDATE ?', [product, product], (err) => {
+            if(err){
+              logger.error({ err, query: insertItem.sql }, `Failed to insert product ${product.name}`);
+            }
+            callback(err);
+          });
+        },
+        similarItems: (callback) => {
+          const deleteMappings = queryDeleteMappings(product, 'similar_map', (err) => {
+            if(err){
+              logger.error({err,query:deleteMappings.sql},`Failed to delete similar items mappings for ${product.url}`);
+              callback(err);
+            } else if(similarProducts.length){
+              const insertMappings = queryInsertMapping('similar_map', Models.SimilarMap.keys().join(','), similarProducts, (err) => {
+                if(err){
+                  logger.error({ err, query: insertMappings.sql }, `Failed to insert similar products mappings for ${product.url}`);
+                }
+                callback(err);
+              });
+            } else {
+              callback(null);
+            }
+          });
+        },
+        markCrawled: (callback) => {
+          return redis.sadd('items.crawled', product.url, callback);
+        },
+        insertMappings: (callback) => {
+          insertMappings(product, mappings, callback);
+        }
+      };
 
-    const similarProducts = data.similar.map((item) => {
-      return Object.values(new Models.SimilarMap(product,item));
-    });
-
-    const insertItem = db.query('INSERT INTO products SET ? ON DUPLICATE KEY UPDATE ?', [product, product], (err) => {
-      if(err){
-        logger.error({ err, query: insertItem.sql }, `Failed to insert product ${product.name}`);
-      }
-    });
-
-    const deleteMappings = queryDeleteMappings(product, 'similar_map', (err) => {
-      if(err){
-        logger.error({err,query:deleteMappings.sql},`Failed to delete similar items mappings for ${product.url}`);
-      } else {
-        const insertMappings = queryInsertMapping('similar_map', Models.SimilarMap.keys().join(','), similarProducts, (err) => {
-          if(err){
-            logger.error({ err, query: insertMappings.sql }, `Failed to insert similar products mappings for ${product.url}`);
-          }
-        });
-      }
-    });
-
-    insertMappings(product, mappings);
+      async.parallel(tasks, (err) => {
+        if(!err){
+          logger.info({ item: product }, 'Finished crawling item');
+        }
+        callback(err);
+      });
+    }
   }).catch((err) => {
-    logger.error({ err, fragment }, 'Failed to fetch product');
+    logger.error({ err, item: { url: fragment } }, 'Failed to fetch product');
+    callback(err);
   });
 }
 

@@ -28,23 +28,30 @@ module.exports = {
     async.series([
       (callback) => { return redis.sadd('categories.crawled', item.url, callback); },
       (callback) => {
-        return redis.sadd(diffKey, items, (err, count) => {
+        return items.length ? redis.sadd(diffKey, items, (err, count) => {
           if(!err){
             catLen = count;
           }
           callback(err);
-        });
+        }) : callback(null);
       },
       (callback) => {
         return redis.sdiff(diffKey, 'categories.crawled', (err, notCrawled) => {
           redis.del(diffKey);
-          if(!err){
-            redis.sadd('categories.queued', notCrawled);
+
+          if(err){
+            callback(err);
+          } else if(notCrawled.length){
             const toCrawlLen = notCrawled.length;
             const diffLen = (catLen - toCrawlLen).toFixed(0);
-            logger.info({ item },`Added ${notCrawled.length} categories into the queue, ${diffLen} skipped of ${catLen}`);
+
+            redis.sadd('categories.queued', notCrawled, (err) => {
+              logger.info({ item },`Added ${notCrawled.length} categories into the queue, ${diffLen} skipped of ${catLen}`);
+              callback(err);
+            });
+          } else {
+            callback(null);
           }
-          callback(err);
         });
       }
     ], callback);
@@ -61,23 +68,30 @@ module.exports = {
 
     async.series([
       (callback) => {
-        return redis.sadd(diffKey, items, (err, count) => {
+        return items.length ? redis.sadd(diffKey, items, (err, count) => {
           if(!err){
             itemLen = count;
           }
           callback(err);
-        });
+        }) : callback(null);
       },
       (callback) => {
         return redis.sdiff(diffKey, 'items.crawled', (err, notCrawled) => {
           redis.del(diffKey);
-          if(!err){
-            redis.sadd('items.queued', notCrawled);
+
+          if(err){
+            callback(err);
+          } else if(notCrawled.length){
             const toCrawlLen = notCrawled.length;
             const diffLen = (itemLen - toCrawlLen).toFixed(0);
-            logger.info(`Added ${notCrawled.length} items into the queue, ${diffLen} skipped of ${itemLen}`);
+
+            redis.sadd('items.queued', notCrawled, (err) => {
+              logger.info(`Added ${notCrawled.length} items into the queue, ${diffLen} skipped of ${itemLen}`);
+              callback(err);
+            });
+          } else {
+            callback(null);
           }
-          callback(err);
         });
       }
     ], callback);

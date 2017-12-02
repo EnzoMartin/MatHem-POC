@@ -5,7 +5,12 @@ const { diffCrawledCategories } = require('./utils');
 
 const { logger } = config;
 
-function scanSidebar(fragment){
+/**
+ * Scan the sidebar for initial categories
+ * @param {String} fragment
+ * @param {Function} callback
+ */
+function scanSidebar(fragment, callback){
   const url = `${config.rootUrl}${fragment}`;
 
   getSidebarLinks(url).then((data) => {
@@ -19,9 +24,11 @@ function scanSidebar(fragment){
       if(err){
         logger.error({ err }, 'Failed to diff categories from sidebar');
       }
+      callback(err);
     });
   }).catch((err) => {
     logger.error({ err }, 'Failed to fetch sidebar');
+    callback(err);
   });
 }
 

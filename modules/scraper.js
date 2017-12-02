@@ -102,7 +102,6 @@ function getProductDetail(url){
       listItem: '.productPage',
       name: 'product',
       data: {
-        // TODO: Handle out of stock items
         name: 'h1',
         content: {
           selector: '.productInfo',
@@ -126,8 +125,31 @@ function getProductDetail(url){
           selector: '.productInfo p > a',
           attr: 'href'
         },
-        offer: '.prodImg .offerBubble',
-        limitations: '.prodImg .deliveryDays',
+        offer: {
+          selector: '.prodImg .offerAndDelivery .offerBubble',
+          how: 'html',
+          convert: (item) => {
+            return item ? item.split('\r')[0].trim() : '';
+          }
+        },
+        defaultAmount: {
+          selector: '#inpProductCount',
+          attr: 'value'
+        },
+        stocked: {
+          selector: '.productBox.prod-info .prodImgAndBuy .alert',
+          how: 'html',
+          convert: (item) => {
+            return !(item && item.includes('inte i lager'));
+          }
+        },
+        limitations: {
+          selector: '.prodImg .deliveryDays',
+          how: 'html',
+          convert: (item) => {
+            return item ? item.split('\r')[0].trim() : '';
+          }
+        },
         image: {
           selector: '.prodImg #productImage',
           attr: 'src'
@@ -143,21 +165,21 @@ function getProductDetail(url){
           selector: '.productPrice .red #spnPrice',
           how: 'html',
           convert: (item) => {
-            return convertToDecimal(item);
+            return item ? convertToDecimal(item) : 0;
           }
         },
         priceType: {
           selector: '.productPrice .priceKg > span',
           how: 'html',
           convert: (item) => {
-            return item.split('/')[1].trim();
+            return item ? item.split('/')[1].trim() : '';
           }
         },
         priceUnit: {
           selector: '.productPrice .priceKg > span',
           how: 'html',
           convert: (item) => {
-            return convertToDecimal(item.split('/')[0].replace('ca', ''));
+            return item ? convertToDecimal(item.split('/')[0].replace('ca', '')) : 0;
           }
         }
       }

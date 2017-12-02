@@ -64,6 +64,8 @@ class Item extends WithUrl {
     this.priceReduced = data.priceReduced || 0.00;
     this.priceType = data.priceType || '';
     this.priceUnit = data.priceUnit || 0.00;
+    this.defaultAmount = data.defaultAmount || 1;
+    this.stocked = typeof data.stocked === 'boolean' ? data.stocked : true;
   }
 }
 
