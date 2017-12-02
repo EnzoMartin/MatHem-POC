@@ -2,6 +2,9 @@
 
 Small project to play with the UX of a grocery website
 
+## TODO
+- Make UI
+
 ## Usage
 
 - Install NodeJS 8.9+
@@ -10,7 +13,7 @@ Small project to play with the UX of a grocery website
 - Run `npm i` in repo root
 - Create a database
 - Create `.env` file with the following information:
-  - ```
+    ```
     DB_USER=<db username>
     DB_PASSWORD=<db password>
     DB_PORT=3306
