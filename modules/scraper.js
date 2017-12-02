@@ -123,7 +123,13 @@ function getProductDetail(url){
           selector: '.productInfo p > a',
           how: 'html',
           convert: (item) => {
-            return item ? item.replace('varor fr&#xE5;n', '').trim() : '';
+            let converted = '';
+            if(item){
+              // HTML keeps sneaking in
+              item = item.replace('<span class="red">', '').replace('</span>', '');
+              converted = item.replace('varor fr&#xE5;n', '').trim();
+            }
+            return converted;
           }
         },
         manufacturerUrl: {
