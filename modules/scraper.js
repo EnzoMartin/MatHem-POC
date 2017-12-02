@@ -111,7 +111,12 @@ function getProductDetail(url){
           selector: '.productInfo > p',
           how: 'html',
           convert: (item) => {
-            return item.includes('Ursprung') ? item.replace('<strong>Ursprung:</strong>', '').trim() : '';
+            let converted = '';
+            if(item){
+              item = item.split('\r')[0];
+              converted = item.startsWith('Ursprung') ? item.replace('<strong>Ursprung:</strong>', '').trim() : '';
+            }
+            return converted;
           }
         },
         manufacturer: {
