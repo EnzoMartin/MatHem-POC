@@ -62,7 +62,7 @@ function scanItems(err, callback){
   if(err){
     logAndDie(err, 'Failed to begin scanning items');
   } else {
-    redis.spop('items.queued', 20, (err, urls) => {
+    redis.spop('items.queued', 1, (err, urls) => {
       if(err){
         logAndDie(err, 'Failed to get queued items');
       } else if(urls.length){
