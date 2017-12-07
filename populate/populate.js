@@ -1,6 +1,6 @@
 /* eslint-disable no-process-exit */
 
-const config = require('./config');
+const config = require('../config');
 const async = require('async');
 
 const scanSidebar = require('./modules/sidebar');

@@ -27,6 +27,7 @@
     "test:watch": "nyc mocha --full-trace --recursive -w",
     "test:ci": "nyc mocha --full-trace --recursive -R mocha-junit-reporter && nyc report --reporter=lcov",
     "dev": "node app.js | bunyan -o short --color",
+    "populate": "node ./populate/populate.js | bunyan -o short --color",
     "db-up": "db-migrate up --verbose",
     "db-down": "db-migrate down --verbose"
   },

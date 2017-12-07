@@ -1,6 +1,6 @@
 const async = require('async');
 
-const config = require('../config');
+const config = require('../../config');
 const Models = require('../models');
 
 const { diffCrawledCategories, diffCrawledItems } = require('./utils');

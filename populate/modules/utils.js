@@ -1,7 +1,7 @@
 const async = require('async');
 const uuid = require('uuid');
 
-const config = require('../config');
+const config = require('../../config');
 const { logger, redis } = config;
 
 module.exports = {
