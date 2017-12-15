@@ -33,7 +33,7 @@ USER node
 WORKDIR /usr/src/app/
 
 # Copy built modules
-COPY --from=Build ./node_modules/ /usr/src/app/node_modules/
+COPY --from=Build . /usr/src/app/node_modules
 
 # Copy files
 COPY . ./config.js
