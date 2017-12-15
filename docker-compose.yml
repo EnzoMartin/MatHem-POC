@@ -23,8 +23,11 @@ services:
   certbot:
     image: certbot:latest
     command: certbot --nginx certonly
-    volumes_from:
-      - web-server
+    volumes:
+      - /data/certbot/letsencrypt/:/var/www/letsencrypt
+      - /data/certbot/certs/:/var/certs
+      - /data/letsencrypt/etc/:/etc/letsencrypt
+      - /data/letsencrypt/var/:/var/lib/letsencrypt
     links:
       - nginx
     networks:
@@ -34,8 +37,10 @@ services:
     image: enzomartin78/mathem-poc-nginx:master-latest
     volumes:
       - /data/nginx/logs/:/var/log/nginx
-    volumes_from:
-      - web-server
+      - /data/certbot/letsencrypt/:/var/www/letsencrypt
+      - /data/certbot/certs/:/var/certs
+      - /data/letsencrypt/etc/:/etc/letsencrypt
+      - /data/letsencrypt/var/:/var/lib/letsencrypt
     ports:
       - "80:80"
       - "443:443"
@@ -66,10 +71,3 @@ env_file: .env
 networks:
   server:
   db:
-
-volumes:
-  web-server:
-    - /data/certbot/letsencrypt/:/var/www/letsencrypt
-    - /data/certbot/certs/:/var/certs
-    - /data/letsencrypt/etc/:/etc/letsencrypt
-    - /data/letsencrypt/var/:/var/lib/letsencrypt
