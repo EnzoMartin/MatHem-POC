@@ -12,13 +12,12 @@ services:
     image: mysql:8
     environment:
       - MYSQL_DATABASE: mathem
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_USER
-      - MYSQL_PASSWORD
     volumes:
        - /data/mysql:/var/lib/mysql
     networks:
       - db
+    env_file:
+      - ./.env
 
   certbot:
     image: certbot:latest
@@ -53,8 +52,6 @@ services:
       image: enzomartin78/mathem-poc:master-latest
       environment:
         - NODE_ENV: production
-        - MYSQL_USER
-        - MYSQL_PASSWORD
       restart: unless-stopped
       depends_on:
         - mysql
@@ -65,8 +62,8 @@ services:
       networks:
         - db
         - server
-
-env_file: .env
+      env_file:
+        - ./.env
 
 networks:
   server:
