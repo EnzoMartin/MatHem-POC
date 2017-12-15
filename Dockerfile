@@ -33,18 +33,18 @@ USER node
 WORKDIR /usr/src/app/
 
 # Copy built modules
-COPY --from=Build . /usr/src/app/node_modules
+COPY --from=Build /usr/src/app/node_modules ./
 
 # Copy files
-COPY . ./package.json
-COPY . ./config.js
-COPY . ./app.js
-COPY . ./database.json
+COPY /usr/src/app/package.json ./
+COPY /usr/src/app/config.js ./
+COPY /usr/src/app/app.js ./
+COPY /usr/src/app/database.json ./
 
 # Copy application directories
-COPY . ./populate
-COPY . ./migrations
-COPY --from=Build . /usr/src/app/service
+COPY /usr/src/app/populate ./
+COPY /usr/src/app/migrations ./
+COPY --from=Build /usr/src/app/service ./
 
 # Ready to go
 CMD [ "node", "service/start.js" ]
