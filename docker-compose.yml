@@ -20,7 +20,7 @@ services:
       - ./.env
 
   certbot:
-    image: certbot:latest
+    image: certbot/certbot:latest
     command: certbot --nginx certonly
     volumes:
       - /data/certbot/letsencrypt/:/var/www/letsencrypt
