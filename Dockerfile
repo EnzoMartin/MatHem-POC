@@ -36,6 +36,7 @@ WORKDIR /usr/src/app/
 COPY --from=Build . /usr/src/app/node_modules
 
 # Copy files
+COPY . ./package.json
 COPY . ./config.js
 COPY . ./app.js
 COPY . ./database.json
