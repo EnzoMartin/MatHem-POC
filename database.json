@@ -18,9 +18,9 @@
   "production": {
     "driver": "mysql",
     "host": {"ENV": "DB_HOST"},
-    "user": {"ENV": "DB_USER"},
+    "user": {"ENV": "MYSQL_USER"},
     "port": {"ENV": "DB_PORT"},
-    "password": {"ENV": "DB_PASSWORD"},
-    "database": {"ENV": "DB_DATABASE"}
+    "password": {"ENV": "MYSQL_PASSWORD"},
+    "database": "mathem"
   }
 }

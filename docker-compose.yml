@@ -1,0 +1,75 @@
+version: "3"
+services:
+
+  redis:
+    image: redis:4-alpine
+    volumes:
+      - /data/redis:/data
+    networks:
+      - db
+
+  mysql:
+    image: mysql:8
+    environment:
+      - MYSQL_DATABASE: mathem
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    volumes:
+       - /data/mysql:/var/lib/mysql
+    networks:
+      - db
+
+  certbot:
+    image: certbot:latest
+    command: certbot --nginx certonly
+    volumes_from:
+      - web-server
+    links:
+      - nginx
+    networks:
+      - server
+
+  nginx:
+    image: enzomartin78/mathem-poc-nginx:master-latest
+    volumes:
+      - /data/nginx/logs/:/var/log/nginx
+    volumes_from:
+      - web-server
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - service
+    networks:
+      - server
+
+    service:
+      image: enzomartin78/mathem-poc:master-latest
+      environment:
+        - NODE_ENV: production
+        - MYSQL_USER
+        - MYSQL_PASSWORD
+      restart: unless-stopped
+      depends_on:
+        - mysql
+        - redis
+      links:
+        - mysql
+        - redis
+      networks:
+        - db
+        - server
+
+env_file: .env
+
+networks:
+  server:
+  db:
+
+volumes:
+  web-server:
+    - /data/certbot/letsencrypt/:/var/www/letsencrypt
+    - /data/certbot/certs/:/var/certs
+    - /data/letsencrypt/etc/:/etc/letsencrypt
+    - /data/letsencrypt/var/:/var/lib/letsencrypt
