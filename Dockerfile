@@ -20,9 +20,17 @@ RUN npm i --quiet
 # Copy over the application
 COPY . ./
 
+# Linting
+RUN npm run lint
+
+# Tests
+RUN npm run test
+
 # Compile React application
 #RUN npm run build
 
+# Remove dev modules
+RUN npm prune --production
 
 #### RUNTIME IMAGE ####
 FROM node:9-alpine AS Runtime
