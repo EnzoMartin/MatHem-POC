@@ -11,7 +11,7 @@ services:
   mysql:
     image: mysql:8
     environment:
-      - MYSQL_DATABASE: mathem
+      - MYSQL_DATABASE: "mathem"
     volumes:
        - /data/mysql:/var/lib/mysql
     networks:
@@ -51,7 +51,7 @@ services:
     service:
       image: enzomartin78/mathem-poc:master-latest
       environment:
-        - NODE_ENV: production
+        - NODE_ENV: "production"
       restart: unless-stopped
       depends_on:
         - mysql
