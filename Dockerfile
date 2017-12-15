@@ -21,7 +21,7 @@ RUN npm i --quiet
 COPY . ./
 
 # Compile React application
-RUN npm run build
+#RUN npm run build
 
 
 #### RUNTIME IMAGE ####
