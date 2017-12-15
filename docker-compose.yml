@@ -48,22 +48,22 @@ services:
     networks:
       - server
 
-    service:
-      image: enzomartin78/mathem-poc:master-latest
-      environment:
-        - NODE_ENV: "production"
-      restart: unless-stopped
-      depends_on:
-        - mysql
-        - redis
-      links:
-        - mysql
-        - redis
-      networks:
-        - db
-        - server
-      env_file:
-        - ./.env
+  service:
+    image: enzomartin78/mathem-poc:master-latest
+    environment:
+      - NODE_ENV: "production"
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    links:
+      - mysql
+      - redis
+    networks:
+      - db
+      - server
+    env_file:
+      - ./.env
 
 networks:
   server:
