@@ -7,13 +7,13 @@ class Map {
    * @param {Object} product
    * @param {Object} target
    */
-  constructor(product, target){
+  constructor(product, target) {
     this.id = uuid.v4();
     this.product = product.url;
     this.target = target.url;
   }
 
-  static keys(){
+  static keys() {
     return ['id', 'product', 'target'];
   }
 }
@@ -24,7 +24,7 @@ class SimpleMap extends Map {
    * @param {Object} product
    * @param {Object} target
    */
-  constructor(product, target){
+  constructor(product, target) {
     super(product, target);
     this.target = target.name;
   }
@@ -35,7 +35,7 @@ class WithName {
    * Create a new object with a name
    * @param {Object} data
    */
-  constructor(data){
+  constructor(data) {
     this.name = data.name;
   }
 }
@@ -45,7 +45,7 @@ class WithUrl extends WithName {
    * Create a new object with a name and URL
    * @param {Object} data
    */
-  constructor(data){
+  constructor(data) {
     super(data);
     this.url = data.url;
   }
@@ -53,7 +53,7 @@ class WithUrl extends WithName {
 
 // Specifics
 class Item extends WithUrl {
-  constructor(data){
+  constructor(data) {
     super(data);
 
     this.offer = data.offer || '';
@@ -70,20 +70,20 @@ class Item extends WithUrl {
 }
 
 class Category extends WithUrl {
-  constructor(data){
+  constructor(data) {
     super(data);
     this.parent = data.parent === '/' || !data.parent ? null : data.parent;
     this.description = data.description || '';
     this.title = data.title || this.name;
   }
 
-  static keys(){
+  static keys() {
     return ['id', 'product', 'target', 'parent', 'title', 'description'];
   }
 }
 
 class Badge extends WithUrl {
-  constructor(data){
+  constructor(data) {
     super(data);
     this.text = data.text || this.name;
   }
@@ -92,7 +92,7 @@ class Badge extends WithUrl {
 class Manufacturer extends WithUrl {}
 class Origin extends WithName {}
 class Tag extends WithName {
-  constructor(data){
+  constructor(data) {
     super(data);
     this.name = this.name.replace('Denna vara är ', '').replace(/[^\w\s]/gi, '').toLowerCase();
   }

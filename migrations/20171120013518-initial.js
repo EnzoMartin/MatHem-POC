@@ -4,13 +4,13 @@ let dbm;
 let type;
 let seed;
 
-exports.setup = function (options, seedLink){
+exports.setup = function (options, seedLink) {
   dbm = options.dbmigrate;
   type = dbm.dataType;
   seed = seedLink;
 };
 
-exports.up = function (db, callback){
+exports.up = function (db, callback) {
   async.series([
     db.createTable.bind(db,'products',{
       url:{type:'varchar(255)',primaryKey:true,notNull:true},
@@ -73,7 +73,7 @@ exports.up = function (db, callback){
   ],callback);
 };
 
-exports.down = function (db, callback){
+exports.down = function (db, callback) {
   async.series([
     db.dropTable.bind(db, 'products'),
     db.dropTable.bind(db, 'categories'),

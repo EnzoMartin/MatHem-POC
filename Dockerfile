@@ -46,7 +46,6 @@ COPY --from=Build /usr/src/app/node_modules/ ./node_modules
 # Copy files
 COPY ./package.json ./
 COPY ./config.js ./
-COPY ./app.js ./
 COPY ./database.json ./
 
 # Copy application directories
