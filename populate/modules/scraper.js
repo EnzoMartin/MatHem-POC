@@ -1,7 +1,7 @@
 const scraper = require('scrape-it');
 const { convertToDecimal } = require('./utils');
 
-function getSidebarLinks(url){
+function getSidebarLinks(url) {
   return scraper(url, {
     menu: {
       listItem: 'ul.navigation li',
@@ -17,7 +17,7 @@ function getSidebarLinks(url){
   });
 }
 
-function getProductList(url){
+function getProductList(url) {
   return scraper(url, {
     name: '.productContainer .myPageTopContainer h1',
     title: '#productResultContainer > .product.textBox h3',
@@ -80,7 +80,7 @@ function getProductList(url){
   });
 }
 
-function getMoreProductList(url){
+function getMoreProductList(url) {
   return scraper(url, {
     items: {
       listItem: '.product.prod-info',
@@ -96,7 +96,7 @@ function getMoreProductList(url){
   });
 }
 
-function getProductDetail(url){
+function getProductDetail(url) {
   return scraper(url, {
     item: {
       listItem: '.productPage',
@@ -112,7 +112,7 @@ function getProductDetail(url){
           how: 'html',
           convert: (item) => {
             let converted = '';
-            if(item){
+            if (item) {
               item = item.split('\r')[0];
               converted = item.startsWith('Ursprung') ? item.replace('<strong>Ursprung:</strong>', '').trim() : '';
             }
@@ -124,7 +124,7 @@ function getProductDetail(url){
           how: 'html',
           convert: (item) => {
             let converted = '';
-            if(item){
+            if (item) {
               // HTML keeps sneaking in
               item = item.replace('<span class="red">', '').replace('</span>', '');
               converted = item.replace('varor fr&#xE5;n', '').trim();

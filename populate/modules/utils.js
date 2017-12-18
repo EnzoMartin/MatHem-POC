@@ -29,7 +29,7 @@ module.exports = {
       (callback) => { return redis.sadd('categories.crawled', item.url, callback); },
       (callback) => {
         return items.length ? redis.sadd(diffKey, items, (err, count) => {
-          if(!err){
+          if (!err) {
             catLen = count;
           }
           callback(err);
@@ -39,9 +39,9 @@ module.exports = {
         return redis.sdiff(diffKey, 'categories.crawled', (err, notCrawled) => {
           redis.del(diffKey);
 
-          if(err){
+          if (err) {
             callback(err);
-          } else if(notCrawled.length){
+          } else if (notCrawled.length) {
             const toCrawlLen = notCrawled.length;
             const diffLen = (catLen - toCrawlLen).toFixed(0);
 
@@ -69,7 +69,7 @@ module.exports = {
     async.series([
       (callback) => {
         return items.length ? redis.sadd(diffKey, items, (err, count) => {
-          if(!err){
+          if (!err) {
             itemLen = count;
           }
           callback(err);
@@ -79,9 +79,9 @@ module.exports = {
         return redis.sdiff(diffKey, 'items.crawled', (err, notCrawled) => {
           redis.del(diffKey);
 
-          if(err){
+          if (err) {
             callback(err);
-          } else if(notCrawled.length){
+          } else if (notCrawled.length) {
             const toCrawlLen = notCrawled.length;
             const diffLen = (itemLen - toCrawlLen).toFixed(0);
 

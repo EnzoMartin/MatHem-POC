@@ -18,11 +18,11 @@ const mapTypes = types.map((item) => {
  * @param {Object} data
  * @returns {Object}
  */
-function generateMappings(product, data){
+function generateMappings(product, data) {
   return types.reduce((mappings, type, index) => {
     const items = data[type];
 
-    if(items.length){
+    if (items.length) {
       const MapModel = Models[mapTypes[index]];
       const definitionKeys = [];
       const updateStatement = [];
@@ -67,7 +67,7 @@ function generateMappings(product, data){
  * @param {Function} callback
  * @returns {*}
  */
-function queryInsertMapping(tableName, keys, values, callback){
+function queryInsertMapping(tableName, keys, values, callback) {
   return db.query(`INSERT INTO ${tableName} (${keys}) VALUES ?`, [values], callback);
 }
 
@@ -78,7 +78,7 @@ function queryInsertMapping(tableName, keys, values, callback){
  * @param {Function} callback
  * @returns {*}
  */
-function queryDeleteMappings(product, tableName, callback){
+function queryDeleteMappings(product, tableName, callback) {
   return db.query(`DELETE FROM ${tableName} WHERE product = ?`, product.url, callback);
 }
 
@@ -88,16 +88,16 @@ function queryDeleteMappings(product, tableName, callback){
  * @param {Object} allMappings
  * @param {Function} callback
  */
-function insertMappings(product, allMappings, callback){
+function insertMappings(product, allMappings, callback) {
   const tasks = types.map((type) => {
     return (callback) => {
       const mappingTable = `${type}_map`;
       const data = allMappings[type] || {};
       const { definitions, mappings } = data;
 
-      function insertMappings(){
+      function insertMappings() {
         const insertMappings = queryInsertMapping(mappingTable, mappings.keys, mappings.values, (err) => {
-          if(err){
+          if (err) {
             logger.error({ err, query: insertMappings.sql }, `Failed to insert ${type} mappings for ${product.url}`);
           }
           callback(err);
@@ -106,14 +106,14 @@ function insertMappings(product, allMappings, callback){
 
       // Clear out the existing product <-> definition mapping first
       const deleteMappings = queryDeleteMappings(product, mappingTable, (err) => {
-        if(err){
+        if (err) {
           logger.error({err,query:deleteMappings.sql},`Failed to delete ${type} mappings for ${product.url}`);
           callback(err);
-        } else if(definitions && definitions.values.length){
+        } else if (definitions && definitions.values.length) {
           // Add the updated definitions
-          if(type !== 'categories'){
+          if (type !== 'categories') {
             const insertDefinitions = db.query(`INSERT INTO ${type} (${definitions.keys}) VALUES ? ON DUPLICATE KEY UPDATE ${definitions.updateStatement}`, [definitions.values], (err) => {
-              if(err){
+              if (err) {
                 logger.error({ err, query: insertDefinitions.sql }, `Failed to insert ${type} map definition`);
                 callback(err);
               } else {
@@ -140,14 +140,14 @@ function insertMappings(product, allMappings, callback){
  * @param {String} fragment
  * @param {Function} callback
  */
-function scanProduct(fragment, callback){
+function scanProduct(fragment, callback) {
   const url = `${config.rootUrl}${fragment}`;
 
   getProductDetail(url).then((data) => {
     const item = data.item[0];
 
     // Some items are unparseable apparently
-    if(!item){
+    if (!item) {
       redis.sadd('items.unparseable', fragment, () => {
         callback();
       });
@@ -189,7 +189,7 @@ function scanProduct(fragment, callback){
       const tasks = {
         insertItem: (callback) => {
           const insertItem = db.query('INSERT INTO products SET ? ON DUPLICATE KEY UPDATE ?', [product, product], (err) => {
-            if(err){
+            if (err) {
               logger.error({ err, query: insertItem.sql }, `Failed to insert product ${product.name}`);
             }
             callback(err);
@@ -197,12 +197,12 @@ function scanProduct(fragment, callback){
         },
         similarItems: (callback) => {
           const deleteMappings = queryDeleteMappings(product, 'similar_map', (err) => {
-            if(err){
+            if (err) {
               logger.error({err,query:deleteMappings.sql},`Failed to delete similar items mappings for ${product.url}`);
               callback(err);
-            } else if(similarProducts.length){
+            } else if (similarProducts.length) {
               const insertMappings = queryInsertMapping('similar_map', Models.SimilarMap.keys().join(','), similarProducts, (err) => {
-                if(err){
+                if (err) {
                   logger.error({ err, query: insertMappings.sql }, `Failed to insert similar products mappings for ${product.url}`);
                 }
                 callback(err);
@@ -221,7 +221,7 @@ function scanProduct(fragment, callback){
       };
 
       async.parallel(tasks, (err) => {
-        if(!err){
+        if (!err) {
           logger.info({ item: product }, 'Finished crawling item');
         }
         callback(err);

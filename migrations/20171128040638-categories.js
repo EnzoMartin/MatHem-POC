@@ -4,20 +4,20 @@ let dbm;
 let type;
 let seed;
 
-exports.setup = function (options, seedLink){
+exports.setup = function (options, seedLink) {
   dbm = options.dbmigrate;
   type = dbm.dataType;
   seed = seedLink;
 };
 
-exports.up = function (db, callback){
+exports.up = function (db, callback) {
   async.series([
     db.addColumn.bind(db,'categories','title',{type:'varchar(255)'}),
     db.addColumn.bind(db,'categories','description',{type:'text'})
   ],callback);
 };
 
-exports.down = function (db, callback){
+exports.down = function (db, callback) {
   async.series([
     db.removeColumn.bind(db, 'categories','title'),
     db.removeColumn.bind(db, 'categories','description')

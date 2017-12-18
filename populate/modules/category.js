@@ -13,7 +13,7 @@ const { logger, db } = config;
  * @param {String} fragment
  * @param {Function} callback
  */
-function scanCategory(fragment, callback){
+function scanCategory(fragment, callback) {
   const url = `${config.rootUrl}${fragment}`;
 
   getProductList(url).then((data) => {
@@ -25,22 +25,28 @@ function scanCategory(fragment, callback){
     const category = new Models.Category(data);
 
     // Build list of categories to queue for further crawling
-    const categories = data.categories.map((item) => { return item.url; }).concat(
-      data.subcategories.map((item) => { return item.url; })
+    const categories = data.categories.map((item) => {
+      return item.url;
+    }).concat(
+      data.subcategories.map((item) => {
+        return item.url;
+      })
     );
 
     // Start on page 2 since page 1 is part of the initial category
-    for(let page = 2; page <= totalPages; page++){
-      pages.push(getMoreProductList(fetchMoreUrl.replace('pageIndex=1',`pageIndex=${page}`)));
+    for (let page = 2; page <= totalPages; page++) {
+      pages.push(getMoreProductList(fetchMoreUrl.replace('pageIndex=1', `pageIndex=${page}`)));
     }
 
     // Flatten items for URLs
-    const items = data.items.map((item) => { return item.url; });
+    const items = data.items.map((item) => {
+      return item.url;
+    });
 
     const tasks = {
       insertCategory: (callback) => {
         const insertCategory = db.query('INSERT INTO categories SET ? ON DUPLICATE KEY UPDATE ?', [category, category], (err) => {
-          if(err){
+          if (err) {
             logger.error({ err, query: insertCategory.sql }, `Failed to insert category ${category.name}`);
           }
           callback(err);
@@ -48,7 +54,7 @@ function scanCategory(fragment, callback){
       },
       diffCategories: (callback) => {
         diffCrawledCategories(category, categories, (err) => {
-          if(err){
+          if (err) {
             logger.error({ err }, 'Failed to diff categories');
           }
           callback(err);
@@ -57,11 +63,13 @@ function scanCategory(fragment, callback){
       diffItems: (callback) => {
         Promise.all(pages).then((data) => {
           data.forEach((item) => {
-            items.push(...item.items.map((item) => { return item.url; }));
+            items.push(...item.items.map((item) => {
+              return item.url;
+            }));
           });
 
           diffCrawledItems(items, (err) => {
-            if(err){
+            if (err) {
               logger.error({ err }, 'Failed to diff items');
             }
             callback(err);

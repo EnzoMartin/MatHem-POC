@@ -10,7 +10,7 @@ const { logger } = config;
  * @param {String} fragment
  * @param {Function} callback
  */
-function scanSidebar(fragment, callback){
+function scanSidebar(fragment, callback) {
   const url = `${config.rootUrl}${fragment}`;
 
   getSidebarLinks(url).then((data) => {
@@ -21,7 +21,7 @@ function scanSidebar(fragment, callback){
     const categories = menu.map((item) => { return item.url; });
 
     diffCrawledCategories({url: '/', name: 'Home'}, categories, (err) => {
-      if(err){
+      if (err) {
         logger.error({ err }, 'Failed to diff categories from sidebar');
       }
       callback(err);
